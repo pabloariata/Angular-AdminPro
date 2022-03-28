@@ -16,11 +16,11 @@ export class BreadcrumbsComponent implements OnDestroy{
 
   constructor(private router: Router) {
 
-    // this.tituloSubs$ = this.getArgumentosRuta()
-    //                     .subscribe(({titulo}) => {
-    //                       this.titulo = titulo;
-    //                       document.title = `AdminPro ${this.titulo}`;
-    //                     });
+    this.tituloSubs$ = this.getArgumentosRuta()
+                        .subscribe(({titulo}) => {
+                          this.titulo = titulo;
+                          document.title = `AdminPro ${this.titulo}`;
+                        });
    }
   ngOnDestroy(): void {
 
