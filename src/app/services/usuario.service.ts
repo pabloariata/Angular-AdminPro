@@ -8,6 +8,7 @@ import { LoginForm } from '../interfaces/login-form.interface';
 import { Observable, of } from 'rxjs';
 import { Router } from '@angular/router';
 import { Usuario } from '../models/usuario.model';
+import { CargarUsuario } from '../interfaces/cargar-usuarios.interface';
 
 
 const base_url = environment.base_url;
@@ -34,6 +35,14 @@ export class UsuarioService {
 
   get uid(): string {
     return this.usuario.uid || '';
+  }
+
+  get headers() {
+    return {
+      headers: {
+        'x-token': this.token
+      }
+    }
   }
 
   logout() {
@@ -68,11 +77,8 @@ export class UsuarioService {
 
   validarToken(): Observable<boolean> {
 
-    return this.http.get(`${base_url}/login/renew`, {
-      headers: {
-        'x-token': this.token
-      }
-    }).pipe(
+    return this.http.get(`${base_url}/login/renew`, this.headers)
+      .pipe(
       map((resp: any) => {
 
         const { email, google, nombre, role, img, uid } = resp.usuario;
@@ -102,15 +108,11 @@ export class UsuarioService {
     data = {
       ...data,
       role: this.usuario.role!
-    }
+    };
 
     console.log(data);
 
-    return this.http.put(`${base_url}/usuarios/${this.uid}`, data, {
-      headers: {
-        'x-token': this.token
-      }
-    });
+    return this.http.put(`${base_url}/usuarios/${this.uid}`, data, this.headers);
 
   }
 
@@ -133,7 +135,35 @@ export class UsuarioService {
           localStorage.setItem('token', resp.token);
         })
       );
+  }
+
+  cargarUsuarios(desde: number = 0) {
+
+    const url = `${base_url}/usuarios?desde=${desde}`;
+
+    return this.http.get<CargarUsuario>(url, this.headers)
+    // Instanciamos la clase usuario, par acceder al metodo de clase get ImagenUrl (tambien podria hacerse con un pipe en el html, para evitar instanciarlos aca)
+      .pipe(
+        map(resp => {
+          const usuarios = resp.usuarios.map(user => new Usuario(user.nombre, user.email, '', user.img, user.google, user.role, user.uid));
+          console.log(usuarios);
+          return {
+            totalRegistros: resp.totalRegistros,
+            usuarios
+          }
+        })
+      )
 
   }
+
+  eliminarUsuario(usuario: Usuario) {
+    return this.http.delete(`${base_url}/usuarios/${usuario.uid}`, this.headers);
+  }
+
+  guardarUsuario(usuario: Usuario) {
+    return this.http.put(`${base_url}/usuarios/${usuario.uid}`, usuario, this.headers);
+
+  }
+ 
 
 }
